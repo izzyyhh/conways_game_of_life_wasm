@@ -81,7 +81,7 @@ pub fn draw_board(ctx: &CanvasRenderingContext2d, board: &Vec<Vec<Cell>>) -> Res
 
 #[wasm_bindgen]
 pub fn life(iteration: i32) -> Result<(), JsValue> {
-    let canvas_id = "game";
+    let canvas_id = CANVAS_ID;
 
     let window = window().expect("cannot find window");
     let doc = window.document().expect("cannot find document");
@@ -130,6 +130,7 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
                 cell.update(cloned_board.clone());
             }
         }
+
         draw_board(&ctx, &board).expect("cannot draw board");
     }
 
