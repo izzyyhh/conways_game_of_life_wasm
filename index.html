@@ -8,11 +8,17 @@
     <script type="module">
       import init, { life } from "./pkg/conways_game_of_life_wasm.js";
 
-      async function run() {
-        await init();
-        life(20);
+      async function runIterationsWithDelay(iteration) {
+        for (let i = 0; i < iteration; i++) {
+          life(i + 1);
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
       }
 
+      async function run() {
+        await init();
+        runIterationsWithDelay(15);
+      }
       run();
     </script>
   </body>

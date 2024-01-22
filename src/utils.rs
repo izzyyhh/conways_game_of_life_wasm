@@ -1,10 +1,41 @@
-pub fn set_panic_hook() {
-    // When the `console_error_panic_hook` feature is enabled, we can call the
-    // `set_panic_hook` function at least once during initialization, and then
-    // we will get better error messages if our code ever panics.
-    //
-    // For more details see
-    // https://github.com/rustwasm/console_error_panic_hook#readme
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
+use crate::cell::{Cell, CellState};
+
+pub fn intialize_board(board_size: usize) -> Vec<Vec<Cell>> {
+    let mut board: Vec<Vec<Cell>> = Vec::new();
+
+    for i in 0..board_size {
+        let mut row: Vec<Cell> = Vec::new();
+        for j in 0..board_size {
+            let state = if (i + j) % 2 == 0 {
+                CellState::Alive
+            } else {
+                CellState::Dead
+            };
+            row.push(Cell::new(state));
+        }
+        board.push(row);
+    }
+
+    board
+}
+
+pub fn build_neighbors(board: &mut Vec<Vec<Cell>>, board_size: usize) {
+    for i in 0..board_size {
+        for j in 0..board_size {
+            board[i][j].neighbors.clear();
+
+            for x in (i as isize - 1)..=(i as isize + 1) {
+                for y in (j as isize - 1)..=(j as isize + 1) {
+                    if x >= 0
+                        && y >= 0
+                        && x < board_size as isize
+                        && y < board_size as isize
+                        && !(x == i as isize && y == j as isize)
+                    {
+                        board[i][j].neighbors.push((x as usize, y as usize));
+                    }
+                }
+            }
+        }
+    }
 }

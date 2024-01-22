@@ -2,6 +2,7 @@ mod cell;
 mod utils;
 
 use cell::{Cell, CellState};
+use utils::build_neighbors;
 use wasm_bindgen::prelude::*;
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -18,27 +19,6 @@ extern "C" {
     fn alert(s: &str);
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-}
-
-pub fn build_neighbors(board: &mut Vec<Vec<Cell>>) {
-    for i in 0..BOARD_SIZE {
-        for j in 0..BOARD_SIZE {
-            board[i][j].neighbors.clear();
-
-            for x in (i as isize - 1)..=(i as isize + 1) {
-                for y in (j as isize - 1)..=(j as isize + 1) {
-                    if x >= 0
-                        && y >= 0
-                        && x < BOARD_SIZE as isize
-                        && y < BOARD_SIZE as isize
-                        && !(x == i as isize && y == j as isize)
-                    {
-                        board[i][j].neighbors.push((x as usize, y as usize));
-                    }
-                }
-            }
-        }
-    }
 }
 
 pub fn draw_board(ctx: &CanvasRenderingContext2d, board: &Vec<Vec<Cell>>) -> Result<(), JsValue> {
@@ -101,24 +81,8 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
         .dyn_into::<CanvasRenderingContext2d>()
         .expect("cannot cast into CanvasRenderingContext2d");
 
-    alert(&format!("Hello, conways-game-of-life-! {}", iteration));
-
-    let mut board: Vec<Vec<Cell>> = Vec::new();
-
-    for i in 0..BOARD_SIZE {
-        let mut row: Vec<Cell> = Vec::new();
-        for j in 0..BOARD_SIZE {
-            let state = if (i + j) % 2 == 0 {
-                CellState::Alive
-            } else {
-                CellState::Dead
-            };
-            row.push(Cell::new(state));
-        }
-        board.push(row);
-    }
-
-    build_neighbors(&mut board);
+    let mut board = utils::intialize_board(BOARD_SIZE);
+    build_neighbors(&mut board, BOARD_SIZE);
     draw_board(&ctx, &board).expect("could not draw board");
     
     for _ in 0..iteration {
@@ -127,7 +91,7 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
         for i in 0..BOARD_SIZE {
             for j in 0..BOARD_SIZE {
                 let cell = &mut board[i][j];
-                cell.update(cloned_board.clone());
+                cell.update(&cloned_board);
             }
         }
 

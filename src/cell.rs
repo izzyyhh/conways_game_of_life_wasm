@@ -1,11 +1,11 @@
-#[derive(Clone, Copy, Debug )]
+#[derive(Clone, Copy, Debug)]
 pub enum CellState {
     Alive,
     Dead,
     Zombie(i32),
 }
 
-#[derive(Clone, Debug )]
+#[derive(Clone, Debug)]
 pub struct Cell {
     pub state: CellState,
     pub neighbors: Vec<(usize, usize)>,
@@ -19,7 +19,7 @@ impl Cell {
         }
     }
 
-    pub fn update(&mut self, board: Vec<Vec<Cell>>) {
+    pub fn update(&mut self, board: &Vec<Vec<Cell>>) {
         let live_neighbors = self
             .neighbors
             .iter()
