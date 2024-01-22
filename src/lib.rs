@@ -1,8 +1,7 @@
 mod cell;
 mod utils;
 
-use cell::{Cell, CellState};
-use utils::build_neighbors;
+use utils::{build_neighbors, draw_board};
 use wasm_bindgen::prelude::*;
 use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -19,44 +18,6 @@ extern "C" {
     fn alert(s: &str);
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-}
-
-pub fn draw_board(ctx: &CanvasRenderingContext2d, board: &Vec<Vec<Cell>>) -> Result<(), JsValue> {
-    for i in 0..board.len() {
-        for j in 0..board[i].len() {
-            match board[i][j].state {
-                CellState::Alive => {
-                    ctx.set_fill_style(&JsValue::from_str(ALIVE_COLOR));
-                    ctx.fill_rect(
-                        (j as f64) * CELL_SIZE as f64,
-                        (i as f64) * CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                    );
-                }
-                CellState::Dead => {
-                    ctx.set_fill_style(&JsValue::from_str(DEAD_COLOR));
-                    ctx.fill_rect(
-                        (j as f64) * CELL_SIZE as f64,
-                        (i as f64) * CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                    );
-                }
-                _ => {
-                    ctx.set_fill_style(&JsValue::from_str(ZOMBIE_COLOR));
-                    ctx.fill_rect(
-                        (j as f64) * CELL_SIZE as f64,
-                        (i as f64) * CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                        CELL_SIZE as f64,
-                    );
-                }
-            }
-        }
-    }
-
-    Ok(())
 }
 
 #[wasm_bindgen]
@@ -83,7 +44,7 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
 
     let mut board = utils::intialize_board(BOARD_SIZE);
     build_neighbors(&mut board, BOARD_SIZE);
-    draw_board(&ctx, &board).expect("could not draw board");
+    draw_board(&ctx, &board, CELL_SIZE as f64).expect("could not draw board");
     
     for _ in 0..iteration {
         let cloned_board = board.clone();
@@ -95,7 +56,7 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
             }
         }
 
-        draw_board(&ctx, &board).expect("cannot draw board");
+        draw_board(&ctx, &board, CELL_SIZE as f64).expect("cannot draw board");
     }
 
     Ok(())

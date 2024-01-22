@@ -1,4 +1,10 @@
-use crate::cell::{Cell, CellState};
+use wasm_bindgen::JsValue;
+use web_sys::CanvasRenderingContext2d;
+
+use crate::{
+    cell::{Cell, CellState},
+    ALIVE_COLOR, DEAD_COLOR, ZOMBIE_COLOR,
+};
 
 pub fn intialize_board(board_size: usize) -> Vec<Vec<Cell>> {
     let mut board: Vec<Vec<Cell>> = Vec::new();
@@ -17,6 +23,37 @@ pub fn intialize_board(board_size: usize) -> Vec<Vec<Cell>> {
     }
 
     board
+}
+
+pub fn draw_board(
+    ctx: &CanvasRenderingContext2d,
+    board: &Vec<Vec<Cell>>,
+    cell_size: f64,
+) -> Result<(), JsValue> {
+    for i in 0..board.len() {
+        for j in 0..board[i].len() {
+            match board[i][j].state {
+                CellState::Alive => {
+                    ctx.set_fill_style(&JsValue::from_str(ALIVE_COLOR));
+                }
+                CellState::Dead => {
+                    ctx.set_fill_style(&JsValue::from_str(DEAD_COLOR));
+                }
+                _ => {
+                    ctx.set_fill_style(&JsValue::from_str(ZOMBIE_COLOR));
+                }
+            }
+
+            ctx.fill_rect(
+                (j as f64) * cell_size,
+                (i as f64) * cell_size,
+                cell_size,
+                cell_size,
+            );
+        }
+    }
+
+    Ok(())
 }
 
 pub fn build_neighbors(board: &mut Vec<Vec<Cell>>, board_size: usize) {
