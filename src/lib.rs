@@ -1,5 +1,5 @@
-mod utils;
 mod cell;
+mod utils;
 
 use cell::{Cell, CellState};
 use wasm_bindgen::prelude::*;
@@ -16,9 +16,32 @@ const ZOMBIE_COLOR: &str = "black";
 #[wasm_bindgen]
 extern "C" {
     fn alert(s: &str);
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
 }
 
-pub fn draw_board(ctx: &CanvasRenderingContext2d, board: Vec<Vec<Cell>>) -> Result<(), JsValue> {
+pub fn build_neighbors(board: &mut Vec<Vec<Cell>>) {
+    for i in 0..BOARD_SIZE {
+        for j in 0..BOARD_SIZE {
+            board[i][j].neighbors.clear();
+
+            for x in (i as isize - 1)..=(i as isize + 1) {
+                for y in (j as isize - 1)..=(j as isize + 1) {
+                    if x >= 0
+                        && y >= 0
+                        && x < BOARD_SIZE as isize
+                        && y < BOARD_SIZE as isize
+                        && !(x == i as isize && y == j as isize)
+                    {
+                        board[i][j].neighbors.push((x as usize, y as usize));
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn draw_board(ctx: &CanvasRenderingContext2d, board: &Vec<Vec<Cell>>) -> Result<(), JsValue> {
     for i in 0..board.len() {
         for j in 0..board[i].len() {
             match board[i][j].state {
@@ -40,7 +63,15 @@ pub fn draw_board(ctx: &CanvasRenderingContext2d, board: Vec<Vec<Cell>>) -> Resu
                         CELL_SIZE as f64,
                     );
                 }
-                _ => {}
+                _ => {
+                    ctx.set_fill_style(&JsValue::from_str(ZOMBIE_COLOR));
+                    ctx.fill_rect(
+                        (j as f64) * CELL_SIZE as f64,
+                        (i as f64) * CELL_SIZE as f64,
+                        CELL_SIZE as f64,
+                        CELL_SIZE as f64,
+                    );
+                }
             }
         }
     }
@@ -70,9 +101,6 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
         .dyn_into::<CanvasRenderingContext2d>()
         .expect("cannot cast into CanvasRenderingContext2d");
 
-    ctx.set_fill_style(&JsValue::from("blue"));
-    ctx.fill_rect(0.0, 0.0, 20.0, 20.0);
-    
     alert(&format!("Hello, conways-game-of-life-! {}", iteration));
 
     let mut board: Vec<Vec<Cell>> = Vec::new();
@@ -90,7 +118,20 @@ pub fn life(iteration: i32) -> Result<(), JsValue> {
         board.push(row);
     }
 
-    draw_board(&ctx, board).expect("could not draw board");
+    build_neighbors(&mut board);
+    draw_board(&ctx, &board).expect("could not draw board");
+    
+    for _ in 0..iteration {
+        let cloned_board = board.clone();
+
+        for i in 0..BOARD_SIZE {
+            for j in 0..BOARD_SIZE {
+                let cell = &mut board[i][j];
+                cell.update(cloned_board.clone());
+            }
+        }
+        draw_board(&ctx, &board).expect("cannot draw board");
+    }
 
     Ok(())
 }
